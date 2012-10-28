@@ -1,0 +1,13 @@
+*resharper.user
+# Visual Studio
+[Dd]ebug/
+[Rr]elease/
+*.sln.cache
+*.suo
+*.csproj.user
+*.log
+
+# Resharper
+*[Rr]e[Ss]harper.user
+_ReSharper.*/
+*.user

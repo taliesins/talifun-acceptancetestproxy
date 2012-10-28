@@ -1,0 +1,164 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8D73A1BE-868C-42D2-9ECE-F32CC1A02906}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Talifun.AcceptanceTestProxy</RootNamespace>
+    <AssemblyName>Talifun.AcceptanceTestProxy</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>..\packages\BouncyCastle1.7.1.7\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="log4net">
+      <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="ManagedFusion.Rewriter">
+      <HintPath>..\..\packages\ManagedFusion.Rewriter.3.6.0\lib\net35\ManagedFusion.Rewriter.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Caching" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\GlobalAssemblyInfo.cs">
+      <Link>Properties\GlobalAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Connections\PortListener.cs" />
+    <Compile Include="Connections\PortServer.cs" />
+    <Compile Include="IProxyServer.cs" />
+    <Compile Include="IProxyServerConfiguration.cs" />
+    <Compile Include="Profiles\IProfileManager.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ProxyServerConfiguration.cs" />
+    <Compile Include="UrlRewriter\Wrappers\HttpContext.cs" />
+    <Compile Include="UrlRewriter\Wrappers\HttpRequest.cs" />
+    <Compile Include="UrlRewriter\Wrappers\HttpResponse.cs" />
+    <Compile Include="UrlRewriter\Engines\MicrosoftRewriterEngine.cs" />
+    <Compile Include="UrlRewriter\Engines\MicrosoftRuleSet.cs" />
+    <Compile Include="UrlRewriter\ConditionContext.cs" />
+    <Compile Include="UrlRewriter\Conditions\ConditionFlagProcessor.cs" />
+    <Compile Include="UrlRewriter\Conditions\DefaultCondition.cs" />
+    <Compile Include="UrlRewriter\Conditions\DefaultConditionTestValue.cs" />
+    <Compile Include="UrlRewriter\Conditions\Flags\NoCaseFlag.cs" />
+    <Compile Include="UrlRewriter\Conditions\Flags\OrNextFlag.cs" />
+    <Compile Include="UrlRewriter\Conditions\IsDirectoryCondition.cs" />
+    <Compile Include="UrlRewriter\Conditions\IsFileCondition.cs" />
+    <Compile Include="UrlRewriter\Conditions\IsFileWithSizeCondition.cs" />
+    <Compile Include="UrlRewriter\Conditions\LexicographicallyEqualCondition.cs" />
+    <Compile Include="UrlRewriter\Conditions\LexicographicallyFollowsCondition.cs" />
+    <Compile Include="UrlRewriter\Conditions\LexicographicallyPrecedesCondition.cs" />
+    <Compile Include="UrlRewriter\ConditionVariable.cs" />
+    <Compile Include="UrlRewriter\Engines\IRewriterEngine.cs" />
+    <Compile Include="UrlRewriter\ICondition.cs" />
+    <Compile Include="UrlRewriter\IConditionFlag.cs" />
+    <Compile Include="UrlRewriter\IConditionFlagProcessor.cs" />
+    <Compile Include="UrlRewriter\IConditionTestValue.cs" />
+    <Compile Include="UrlRewriter\IRule.cs" />
+    <Compile Include="UrlRewriter\IRuleAction.cs" />
+    <Compile Include="UrlRewriter\IRuleFlag.cs" />
+    <Compile Include="UrlRewriter\IRuleFlagProcessor.cs" />
+    <Compile Include="UrlRewriter\UrlRewriterManager.cs" />
+    <Compile Include="UrlRewriter\OrderedList.cs" />
+    <Compile Include="UrlRewriter\Pattern.cs" />
+    <Compile Include="UrlRewriter\RewriterException.cs" />
+    <Compile Include="UrlRewriter\RuleContext.cs" />
+    <Compile Include="UrlRewriter\RuleFlagProcessorResponse.cs" />
+    <Compile Include="UrlRewriter\RuleSet.cs" />
+    <Compile Include="UrlRewriter\RuleSetContext.cs" />
+    <Compile Include="UrlRewriter\RuleSetException.cs" />
+    <Compile Include="UrlRewriter\Rules\DefaultOutputRuleAction.cs" />
+    <Compile Include="UrlRewriter\Rules\DefaultRule.cs" />
+    <Compile Include="UrlRewriter\Rules\DefaultRuleAction.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\ChainFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\LastFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\NextRuleFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\NoCaseFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\NoEscapeFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\NotForInternalSubRequestsFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\QueryStringAppendFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\RedirectFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\ResponseCookieFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\ResponseMimeTypeFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\ResponseStatusFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\ServerVariableFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\Flags\SkipRuleFlag.cs" />
+    <Compile Include="UrlRewriter\Rules\RuleFlagProcessor.cs" />
+    <Compile Include="UrlRewriter\Rules\RuleFlagsProcessor.cs" />
+    <Compile Include="UrlRewriter\RuleVariable.cs" />
+    <Compile Include="UrlRewriter\ServerVariable.cs" />
+    <Compile Include="UrlRewriter\ServerVariableType.cs" />
+    <Compile Include="WebServer\CacheEntry.cs" />
+    <Compile Include="WebServer\CacheKey.cs" />
+    <Compile Include="Certificates\CertificateCache.cs" />
+    <Compile Include="Certificates\CertificateGenerator.cs" />
+    <Compile Include="Certificates\CertificateManager.cs" />
+    <Compile Include="Profiles\Profile.cs" />
+    <Compile Include="Profiles\ProfileCache.cs" />
+    <Compile Include="Profiles\ProfileManager.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="WebServer\IProxyCache.cs" />
+    <Compile Include="WebServer\ProxyCache.cs" />
+    <Compile Include="ProxyServer.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="ManagedFusion.Rewriter.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Talifun.AcceptanceTestProxy.Profiles\Talifun.AcceptanceTestProxy.Profiles.csproj">
+      <Project>{B8502616-A223-4B00-B913-EB64561E0E3B}</Project>
+      <Name>Talifun.AcceptanceTestProxy.Profiles</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
