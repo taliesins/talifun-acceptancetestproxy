@@ -12,8 +12,6 @@ namespace Talifun.AcceptanceTestProxy
         string CertificatePath { get; }
         string CertificatePassword { get; }
         bool EnableCaching { get; }
-        Org.BouncyCastle.Crypto.AsymmetricCipherKeyPair CaKeyPair { get; set; }
-        Org.BouncyCastle.X509.X509Certificate CaCertificate { get; set; }
         bool DumpHeaders { get; set; }
         bool DumpPostData { get; set; }
         bool DumpResponseData { get; set; }

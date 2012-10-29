@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections;
+using System.Configuration;
 using System.IO;
 using System.Text.RegularExpressions;
 using Org.BouncyCastle.Asn1.X509;
+using Org.BouncyCastle.Crypto;
+using Org.BouncyCastle.X509;
 using Talifun.AcceptanceTestProxy.Certificates;
 using Talifun.AcceptanceTestProxy.Profiles;
 using Talifun.AcceptanceTestProxy.WebServer;
@@ -11,67 +14,6 @@ namespace Talifun.AcceptanceTestProxy
 {
     public class Program
     {
-        private static void PrintUsageInfo()
-        {
-            Console.WriteLine("AcceptanceTestProxy server usage: ");
-            Console.WriteLine("\t-? = this help");
-            Console.WriteLine("\t-h = dump headers to standard output");
-            Console.WriteLine("\t-p = dump post data to standard output");
-            Console.WriteLine("\t-r = dump response data to standard output (WARNING: redirect your output to a file)");
-            Console.WriteLine();
-            Console.WriteLine("\tNote: Data dumping kills performance");
-            Console.WriteLine();
-            Console.WriteLine("\tDisclaimer: This proxy server is for testing and development purposes only.");
-            Console.WriteLine("\t            Installing this server on a network without the knowledge of others is not");
-            Console.WriteLine("\t            condoned by the author. This proxy server presents a security risk for");
-            Console.WriteLine("\t            users who do not understand SSL certificates and browser security.");
-            Console.WriteLine();
-            Console.WriteLine("\tAuthor: Taliesin Sisson <tali@talifun.com>");
-            Console.WriteLine();
-        }
-
-        private static void CreateCaCertificate(CertificateGenerator certificateGenerator, IProxyServerConfiguration proxyServerConfiguration)
-		{
-			var caKeyPair = certificateGenerator.GetKeyPair();
-
-			IDictionary caCertificateDetails = new Hashtable();
-			caCertificateDetails[X509Name.C] = "UK";
-			caCertificateDetails[X509Name.O] = "Acceptance Test Proxy Organization";
-			caCertificateDetails[X509Name.OU] = "Testing Department";
-			//caCertificateDetails[X509Name.DnQualifier]; //populatated automatically from CN
-			caCertificateDetails[X509Name.ST] = "London";
-			caCertificateDetails[X509Name.CN] = "AcceptanceTestProxy CA";
-			//caCertificateDetails[X509Name.SerialNumber] = CaCertificateName;  //populatated automatically
-
-			//RFC 5208
-			IList caCertificateDetailsOrder = new ArrayList();
-			caCertificateDetailsOrder.Add(X509Name.C);
-			caCertificateDetailsOrder.Add(X509Name.O);
-			caCertificateDetailsOrder.Add(X509Name.OU);
-			//caCertificateDetailsOrder.Add(X509Name.DnQualifier);
-			caCertificateDetailsOrder.Add(X509Name.ST);
-			caCertificateDetailsOrder.Add(X509Name.CN);
-			//caCertificateDetailsOrder.Add(X509Name.SerialNumber);
-
-			var caCertificate = certificateGenerator.GenerateCaCertificate(caKeyPair, caCertificateDetails, caCertificateDetailsOrder);
-
-            var caKeyPairFileName = Path.Combine(proxyServerConfiguration.CertificatePath, proxyServerConfiguration.CaKeyPairFileName);
-			if (File.Exists(caKeyPairFileName))
-			{
-				File.Delete(caKeyPairFileName);
-			}
-			var privateKeyText = certificateGenerator.ExportKeyPair(caKeyPair);
-			File.WriteAllText(caKeyPairFileName, privateKeyText);
-
-            var caCertificateFileName = Path.Combine(proxyServerConfiguration.CertificatePath, proxyServerConfiguration.CaCertificateFileName);
-			if (File.Exists(caCertificateFileName))
-			{
-				File.Delete(caCertificateFileName);
-			}
-			var certificateText = certificateGenerator.ExportCertificate(caCertificate);
-			File.WriteAllText(caCertificateFileName, certificateText);
-		}
-
         static void Main(string[] args)
         {
 			log4net.Config.XmlConfigurator.Configure();
@@ -123,17 +65,10 @@ namespace Talifun.AcceptanceTestProxy
             var proxyCache = new ProxyCache();
             var profileCache = new ProfileCache();
             var profileManager = new ProfileManager(profileCache);
-            var certificateCache = new CertificateCache();
-            var certificateManager = new CertificateManager(certificateCache);
             var certificateGenerator = new CertificateGenerator();
-
+            var certificateCache = new CertificateCache();
+            var certificateManager = GetCertificateManager(proxyServerConfiguration, certificateGenerator, certificateCache);
             var proxyServer = new ProxyServer(proxyServerConfiguration, profileManager, proxyCache, certificateGenerator, certificateManager);
-
-            var caCertificateFileName = Path.Combine(proxyServerConfiguration.CertificatePath, proxyServerConfiguration.CaCertificateFileName);
-            if (!File.Exists(caCertificateFileName))
-            {
-                CreateCaCertificate(certificateGenerator, proxyServerConfiguration);
-            }
 
 			if (proxyServer.Start())
             {
@@ -145,6 +80,108 @@ namespace Talifun.AcceptanceTestProxy
             }
             Console.WriteLine("Press enter to exit");
             Console.ReadLine();
+        }
+
+        /// <summary>
+        /// Creates certificate authority certificate if required.
+        /// </summary>
+        /// <param name="proxyServerConfiguration"></param>
+        /// <param name="certificateGenerator"></param>
+        /// <param name="certificateCache"></param>
+        /// <returns></returns>
+        private static CertificateManager GetCertificateManager(ProxyServerConfiguration proxyServerConfiguration, CertificateGenerator certificateGenerator, CertificateCache certificateCache)
+        {
+            var caCertificateFileName = Path.Combine(proxyServerConfiguration.CertificatePath, proxyServerConfiguration.CaCertificateFileName);
+            if (!File.Exists(caCertificateFileName))
+            {
+                CreateCaCertificate(certificateGenerator, proxyServerConfiguration);
+            }
+
+            AsymmetricCipherKeyPair caKeyPair = null;
+            try
+            {
+                var caKeyPairText = File.ReadAllText(Path.Combine(proxyServerConfiguration.CertificatePath, proxyServerConfiguration.CaKeyPairFileName));
+                caKeyPair = certificateGenerator.ImportKeyPair(caKeyPairText);
+            }
+            catch (Exception ex)
+            {
+                throw new ConfigurationErrorsException(string.Format("Could not read the ca private key from file from {0}", proxyServerConfiguration.CaKeyPairFileName), ex);
+            }
+
+            X509Certificate caCertificate = null;
+            try
+            {
+                var caCertificateText = File.ReadAllText(Path.Combine(proxyServerConfiguration.CertificatePath, proxyServerConfiguration.CaCertificateFileName));
+                caCertificate = certificateGenerator.ImportCertificate(caCertificateText);
+            }
+            catch (Exception ex)
+            {
+                throw new ConfigurationErrorsException(string.Format("Could not read the ca certificate from file from {0}", proxyServerConfiguration.CaCertificateFileName), ex);
+            }
+
+            var certificateManager = new CertificateManager(certificateCache, caKeyPair, caCertificate);
+            return certificateManager;
+        }
+
+        private static void CreateCaCertificate(CertificateGenerator certificateGenerator, IProxyServerConfiguration proxyServerConfiguration)
+        {
+            var caKeyPair = certificateGenerator.GetKeyPair();
+
+            IDictionary caCertificateDetails = new Hashtable();
+            caCertificateDetails[X509Name.C] = "UK";
+            caCertificateDetails[X509Name.O] = "Acceptance Test Proxy Organization";
+            caCertificateDetails[X509Name.OU] = "Testing Department";
+            //caCertificateDetails[X509Name.DnQualifier]; //populatated automatically from CN
+            caCertificateDetails[X509Name.ST] = "London";
+            caCertificateDetails[X509Name.CN] = "AcceptanceTestProxy CA";
+            //caCertificateDetails[X509Name.SerialNumber] = CaCertificateName;  //populatated automatically
+
+            //RFC 5208
+            IList caCertificateDetailsOrder = new ArrayList();
+            caCertificateDetailsOrder.Add(X509Name.C);
+            caCertificateDetailsOrder.Add(X509Name.O);
+            caCertificateDetailsOrder.Add(X509Name.OU);
+            //caCertificateDetailsOrder.Add(X509Name.DnQualifier);
+            caCertificateDetailsOrder.Add(X509Name.ST);
+            caCertificateDetailsOrder.Add(X509Name.CN);
+            //caCertificateDetailsOrder.Add(X509Name.SerialNumber);
+
+            var caCertificate = certificateGenerator.GenerateCaCertificate(caKeyPair, caCertificateDetails, caCertificateDetailsOrder);
+
+            var caKeyPairFileName = Path.Combine(proxyServerConfiguration.CertificatePath, proxyServerConfiguration.CaKeyPairFileName);
+            if (File.Exists(caKeyPairFileName))
+            {
+                File.Delete(caKeyPairFileName);
+            }
+            var privateKeyText = certificateGenerator.ExportKeyPair(caKeyPair);
+            File.WriteAllText(caKeyPairFileName, privateKeyText);
+
+            var caCertificateFileName = Path.Combine(proxyServerConfiguration.CertificatePath, proxyServerConfiguration.CaCertificateFileName);
+            if (File.Exists(caCertificateFileName))
+            {
+                File.Delete(caCertificateFileName);
+            }
+            var certificateText = certificateGenerator.ExportCertificate(caCertificate);
+            File.WriteAllText(caCertificateFileName, certificateText);
+        }
+
+        private static void PrintUsageInfo()
+        {
+            Console.WriteLine("AcceptanceTestProxy server usage: ");
+            Console.WriteLine("\t-? = this help");
+            Console.WriteLine("\t-h = dump headers to standard output");
+            Console.WriteLine("\t-p = dump post data to standard output");
+            Console.WriteLine("\t-r = dump response data to standard output (WARNING: redirect your output to a file)");
+            Console.WriteLine();
+            Console.WriteLine("\tNote: Data dumping kills performance");
+            Console.WriteLine();
+            Console.WriteLine("\tDisclaimer: This proxy server is for testing and development purposes only.");
+            Console.WriteLine("\t            Installing this server on a network without the knowledge of others is not");
+            Console.WriteLine("\t            condoned by the author. This proxy server presents a security risk for");
+            Console.WriteLine("\t            users who do not understand SSL certificates and browser security.");
+            Console.WriteLine();
+            Console.WriteLine("\tAuthor: Taliesin Sisson <tali@talifun.com>");
+            Console.WriteLine();
         }
     }
 }

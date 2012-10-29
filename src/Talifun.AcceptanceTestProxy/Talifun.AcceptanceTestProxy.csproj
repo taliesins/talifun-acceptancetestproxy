@@ -61,6 +61,7 @@
     <Compile Include="..\GlobalAssemblyInfo.cs">
       <Link>Properties\GlobalAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Certificates\ICertificateManager.cs" />
     <Compile Include="Connections\PortListener.cs" />
     <Compile Include="Connections\PortServer.cs" />
     <Compile Include="IProxyServer.cs" />

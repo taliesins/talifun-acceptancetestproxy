@@ -26,7 +26,7 @@ namespace Talifun.AcceptanceTestProxy
         private readonly IProfileManager _profileManager;
         private readonly IProxyCache _proxyCache;
         private readonly CertificateGenerator _certificateGenerator;
-        private readonly CertificateManager _certificateManager;
+        private readonly ICertificateManager _certificateManager;
 
         private const int BufferSize = 8192;
         private static readonly char[] SemiSplit = new char[] { ';' };
@@ -41,7 +41,7 @@ namespace Talifun.AcceptanceTestProxy
 
         private PortServer _portServer;
 
-        public ProxyServer(IProxyServerConfiguration proxyServerConfiguration, IProfileManager profileManager, IProxyCache proxyCache, CertificateGenerator certificateGenerator, CertificateManager certificateManager)
+        public ProxyServer(IProxyServerConfiguration proxyServerConfiguration, IProfileManager profileManager, IProxyCache proxyCache, CertificateGenerator certificateGenerator, ICertificateManager certificateManager)
         {
             _proxyServerConfiguration = proxyServerConfiguration;
             _profileManager = profileManager;
@@ -55,25 +55,9 @@ namespace Talifun.AcceptanceTestProxy
         {
             try
             {
-				try
-				{
-                    var caCertificateText = File.ReadAllText(Path.Combine(_proxyServerConfiguration.CertificatePath, _proxyServerConfiguration.CaCertificateFileName));
-                    _proxyServerConfiguration.CaCertificate = _certificateGenerator.ImportCertificate(caCertificateText);
-				}
-				catch(Exception ex)
-				{
-                    throw new ConfigurationErrorsException(string.Format("Could not read the ca certificate from file from {0}", _proxyServerConfiguration.CaCertificateFileName), ex);
-				}
 
-				try
-				{
-                    var caKeyPairText = File.ReadAllText(Path.Combine(_proxyServerConfiguration.CertificatePath, _proxyServerConfiguration.CaKeyPairFileName));
-                    _proxyServerConfiguration.CaKeyPair = _certificateGenerator.ImportKeyPair(caKeyPairText);
-				}
-				catch (Exception ex)
-				{
-                    throw new ConfigurationErrorsException(string.Format("Could not read the ca private key from file from {0}", _proxyServerConfiguration.CaKeyPairFileName), ex);
-				}
+
+
 
                 _portServer = new PortServer(ProcessRequest, _proxyServerConfiguration.ListeningIpInterface, _proxyServerConfiguration.ListeningPort);
                 _portServer.Start("test");
@@ -335,7 +319,7 @@ namespace Talifun.AcceptanceTestProxy
 			try
 			{
 				var host = new Uri(remoteUri).Host;
-                var siteCertificate = _certificateManager.GetSiteCertificate(_certificateGenerator, _proxyServerConfiguration.CaKeyPair, _proxyServerConfiguration.CaCertificate, _proxyServerConfiguration.CertificatePath, host, _proxyServerConfiguration.CertificatePassword);
+                var siteCertificate = _certificateManager.GetSiteCertificate(_certificateGenerator, _proxyServerConfiguration.CertificatePath, host, _proxyServerConfiguration.CertificatePassword);
 
 				sslStream.AuthenticateAsServer(siteCertificate, false, SslProtocols.Tls | SslProtocols.Ssl3 | SslProtocols.Ssl2, true);
 			}

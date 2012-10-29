@@ -4,23 +4,28 @@ using System.Security.Cryptography.X509Certificates;
 using Org.BouncyCastle.Asn1.X509;
 using Org.BouncyCastle.Crypto;
 using log4net;
+using X509Certificate = Org.BouncyCastle.X509.X509Certificate;
 
 namespace Talifun.AcceptanceTestProxy.Certificates
 {
-	public class CertificateManager
+	public class CertificateManager : ICertificateManager
 	{
         private static readonly object CertificateCreatorLock = new object();
 		private static readonly ILog Logger = LogManager.GetLogger(typeof(CertificateManager));
 		private readonly CertificateCache _certificateCache;
+	    private readonly Org.BouncyCastle.Crypto.AsymmetricCipherKeyPair _caKeyPair;
+	    private readonly Org.BouncyCastle.X509.X509Certificate _caCertificate;
 
-		public CertificateManager(CertificateCache certificateCache)
+		public CertificateManager(CertificateCache certificateCache, AsymmetricCipherKeyPair caKeyPair, X509Certificate caCertificate)
 		{
-			_certificateCache = certificateCache;
+		    _certificateCache = certificateCache;
+		    _caKeyPair = caKeyPair;
+		    _caCertificate = caCertificate;
 		}
-		
-		private static void GenerateSiteCertificate(CertificateGenerator certificateGenerator, AsymmetricCipherKeyPair caKeyPair, Org.BouncyCastle.X509.X509Certificate caCertificate, string certificatePath, string host, string password)
+
+	    private void GenerateSiteCertificate(CertificateGenerator certificateGenerator, string certificatePath, string host, string password)
 		{
-			var keyPair = caKeyPair;
+			var keyPair = _caKeyPair;
 
 			IDictionary certificateDetails = new Hashtable();
 			certificateDetails[X509Name.CN] = host;
@@ -28,7 +33,7 @@ namespace Talifun.AcceptanceTestProxy.Certificates
 			IList certificateDetailsOrder = new ArrayList();
 			certificateDetailsOrder.Add(X509Name.CN);
 
-			var certificate = certificateGenerator.GenerateCertificateSignedWithCaCertificate(caKeyPair, caCertificate, keyPair, certificateDetails, certificateDetailsOrder);
+			var certificate = certificateGenerator.GenerateCertificateSignedWithCaCertificate(_caKeyPair, _caCertificate, keyPair, certificateDetails, certificateDetailsOrder);
 			var certificateData = certificateGenerator.ExportPfxCertificateWithPrivateKey(certificate, keyPair, password);
 			var certificateFileName = Path.Combine(certificatePath, host + ".pfx");
 
@@ -37,7 +42,7 @@ namespace Talifun.AcceptanceTestProxy.Certificates
 			Logger.InfoFormat("Create certificate for host: {0}", host);
 		}
 
-		private static X509Certificate2 GetSiteCertificateFromFile(string certificatePath, string subjectName, string password)
+		private X509Certificate2 GetSiteCertificateFromFile(string certificatePath, string subjectName, string password)
 		{
 			var certificateFileName = Path.Combine(certificatePath, subjectName + ".pfx");
 			var netCertificate = new X509Certificate2(certificateFileName, password, X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
@@ -46,7 +51,7 @@ namespace Talifun.AcceptanceTestProxy.Certificates
 			return netCertificate;
 		}
 
-		public X509Certificate2 GetSiteCertificate(CertificateGenerator certificateGenerator, AsymmetricCipherKeyPair caKeyPair, Org.BouncyCastle.X509.X509Certificate caCertificate, string certificatePath, string host, string password)
+		public X509Certificate2 GetSiteCertificate(CertificateGenerator certificateGenerator, string certificatePath, string host, string password)
 		{
 			var certificate = _certificateCache.GetCertificate(host);
 			if (certificate != null)
@@ -60,7 +65,7 @@ namespace Talifun.AcceptanceTestProxy.Certificates
 			{
 				if (!File.Exists(filename))
 				{
-					GenerateSiteCertificate(certificateGenerator, caKeyPair, caCertificate, certificatePath, host, password);
+					GenerateSiteCertificate(certificateGenerator, certificatePath, host, password);
 				}
 
 				certificate = GetSiteCertificateFromFile(certificatePath, host, password);
