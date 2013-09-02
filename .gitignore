@@ -1,13 +1,20 @@
-*resharper.user
+*.log
+
 # Visual Studio
 [Dd]ebug/
 [Rr]elease/
 *.sln.cache
 *.suo
 *.csproj.user
-*.log
+*.TeamCity.user
+*.DotSettings.user
+crushed.*.css
+crushed.*.js
+bin/
+obj/
 
 # Resharper
 *[Rr]e[Ss]harper.user
 _ReSharper.*/
-*.user
+*resharper.user
+
