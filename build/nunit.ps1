@@ -27,8 +27,7 @@ function Invoke-TestRunner {
   $testOutput = $build.dir + '\test-results.xml'
   
   $targetNunitFramework = 'net-4.0'
-  
-  if ($framework -ne '4.0' -and $framework -ne '4.5')
+  if ($framework -ne '4.0')
   {
 	$targetNunitFramework = 'net-3.5'
   }
